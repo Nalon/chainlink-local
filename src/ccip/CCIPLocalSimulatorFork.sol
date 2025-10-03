@@ -6,7 +6,7 @@ import {Register} from "./Register.sol";
 import {Internal} from "@chainlink/contracts-ccip/contracts/libraries/Internal.sol";
 import {Client} from "@chainlink/contracts-ccip/contracts/libraries/Client.sol";
 import {IERC20} from
-    "@chainlink/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
+    "@openzeppelin/contracts@4.8.3/token/ERC20/IERC20.sol";
 
 /// @title IRouterFork Interface
 interface IRouterFork {
