@@ -5,8 +5,8 @@ import {Test, Vm, console2} from "forge-std/Test.sol";
 import {Register} from "./Register.sol";
 import {Internal} from "@chainlink/contracts-ccip/contracts/libraries/Internal.sol";
 import {Client} from "@chainlink/contracts-ccip/contracts/libraries/Client.sol";
-import {IERC20} from
-    "@chainlink/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@chainlink/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
+import {stdJson} from "forge-std/StdJson.sol";
 
 /// @title IRouterFork Interface
 interface IRouterFork {
@@ -80,6 +80,7 @@ interface IEVM2EVMOffRampPreV1dot6Fork {
 /// @title CCIPLocalSimulatorFork
 /// @notice Works with Foundry only
 contract CCIPLocalSimulatorFork is Test {
+        using stdJson for string;
     /**
      * @notice Events emitted when a CCIP send request is made
      */
@@ -107,7 +108,47 @@ contract CCIPLocalSimulatorFork is Test {
     constructor() {
         vm.recordLogs();
         i_register = new Register();
+        seedRegister();
         vm.makePersistent(address(i_register));
+    }
+
+    function seedRegister() private {
+                // Default location if caller leaves it blank:
+        string memory jsonPath = string.concat(vm.projectRoot(), "/src/ccip/input/networkDetails.json");
+
+        string memory json = vm.readFile(jsonPath);
+
+        string[] memory keys = vm.parseJsonKeys(json, "");
+
+        for (uint256 i = 0; i < keys.length; i++) {
+
+            uint chainId = vm.parseUint(keys[i]);
+            string memory base = string.concat('["', keys[i], '"]');
+
+            // chainSelector stored as STRING in your JSON -> parse to uint and cast to uint64
+            uint64 chainSelector = uint64(vm.parseUint(json.readString(string.concat(base, ".chainSelector"))));
+            address router      = json.readAddress(string.concat(base, ".routerAddress"));
+            address link        = json.readAddress(string.concat(base, ".linkAddress"));
+            address wrapped     = json.readAddress(string.concat(base, ".wrappedNativeAddress"));
+            address ccipBnM     = json.readAddress(string.concat(base, ".ccipBnMAddress"));
+            address ccipLnM     = json.readAddress(string.concat(base, ".ccipLnMAddress"));
+            address rmnProxy    = json.readAddress(string.concat(base, ".rmnProxyAddress"));
+            address regOwner    = json.readAddress(string.concat(base, ".registryModuleOwnerCustomAddress"));
+            address tokenAdmin  = json.readAddress(string.concat(base, ".tokenAdminRegistryAddress"));
+
+            i_register.setNetworkDetails(chainId, Register.NetworkDetails({
+                chainSelector: chainSelector,
+                routerAddress: router,
+                linkAddress: link,
+                wrappedNativeAddress: wrapped,
+                ccipBnMAddress: ccipBnM,
+                ccipLnMAddress: ccipLnM,
+                rmnProxyAddress: rmnProxy,
+                registryModuleOwnerCustomAddress: regOwner,
+                tokenAdminRegistryAddress: tokenAdmin
+            }));
+            
+        }
     }
 
     /**

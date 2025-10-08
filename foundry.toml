@@ -6,6 +6,7 @@ out = 'out'
 libs = ['lib']
 test = 'test'
 cache_path = 'cache_forge'
+fs_permissions = [{ access = "read", path = "./src/ccip/input" }]
 remappings = [
     '@chainlink/contracts-ccip/=lib/chainlink-ccip/chains/evm/',
     '@chainlink/contracts/=lib/chainlink-evm/contracts/',
