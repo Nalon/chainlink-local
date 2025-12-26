@@ -121,33 +121,24 @@ contract CCIPLocalSimulatorFork is Test {
         string[] memory keys = vm.parseJsonKeys(json, "");
 
         for (uint256 i = 0; i < keys.length; i++) {
-
-            uint chainId = vm.parseUint(keys[i]);
             string memory base = string.concat('["', keys[i], '"]');
+            uint chainId = vm.parseUint(keys[i]);
 
-            // chainSelector stored as STRING in your JSON -> parse to uint and cast to uint64
-            uint64 chainSelector = uint64(vm.parseUint(json.readString(string.concat(base, ".chainSelector"))));
-            address router      = json.readAddress(string.concat(base, ".routerAddress"));
-            address link        = json.readAddress(string.concat(base, ".linkAddress"));
-            address wrapped     = json.readAddress(string.concat(base, ".wrappedNativeAddress"));
-            address ccipBnM     = json.readAddress(string.concat(base, ".ccipBnMAddress"));
-            address ccipLnM     = json.readAddress(string.concat(base, ".ccipLnMAddress"));
-            address rmnProxy    = json.readAddress(string.concat(base, ".rmnProxyAddress"));
-            address regOwner    = json.readAddress(string.concat(base, ".registryModuleOwnerCustomAddress"));
-            address tokenAdmin  = json.readAddress(string.concat(base, ".tokenAdminRegistryAddress"));
+            // Handle empty strings for optional addresses
+            string memory ccipBnMStr = json.readString(string.concat(base, ".ccipBnMAddress"));
+            string memory ccipLnMStr = json.readString(string.concat(base, ".ccipLnMAddress"));
 
             i_register.setNetworkDetails(chainId, Register.NetworkDetails({
-                chainSelector: chainSelector,
-                routerAddress: router,
-                linkAddress: link,
-                wrappedNativeAddress: wrapped,
-                ccipBnMAddress: ccipBnM,
-                ccipLnMAddress: ccipLnM,
-                rmnProxyAddress: rmnProxy,
-                registryModuleOwnerCustomAddress: regOwner,
-                tokenAdminRegistryAddress: tokenAdmin
+                chainSelector: uint64(vm.parseUint(json.readString(string.concat(base, ".chainSelector")))),
+                routerAddress: json.readAddress(string.concat(base, ".routerAddress")),
+                linkAddress: json.readAddress(string.concat(base, ".linkAddress")),
+                wrappedNativeAddress: json.readAddress(string.concat(base, ".wrappedNativeAddress")),
+                ccipBnMAddress: bytes(ccipBnMStr).length == 0 ? address(0) : vm.parseAddress(ccipBnMStr),
+                ccipLnMAddress: bytes(ccipLnMStr).length == 0 ? address(0) : vm.parseAddress(ccipLnMStr),
+                rmnProxyAddress: json.readAddress(string.concat(base, ".rmnProxyAddress")),
+                registryModuleOwnerCustomAddress: json.readAddress(string.concat(base, ".registryModuleOwnerCustomAddress")),
+                tokenAdminRegistryAddress: json.readAddress(string.concat(base, ".tokenAdminRegistryAddress"))
             }));
-            
         }
     }
 
