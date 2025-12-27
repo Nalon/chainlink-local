@@ -1,9 +1,14 @@
 const fs = require("fs");
 
-async function main() {
+async function main(environment) {
   try {
+    // Validate environment parameter
+    if (environment !== "testnet" && environment !== "mainnet") {
+      throw new Error(`Invalid environment: ${environment}. Must be "testnet" or "mainnet"`);
+    }
+
     // Call Endpoint #1: chains
-    const chainsRes = await fetch("https://docs.chain.link/api/ccip/v1/chains?environment=testnet&outputKey=chainId&enrichFeeTokens=true", { 
+    const chainsRes = await fetch(`https://docs.chain.link/api/ccip/v1/chains?environment=${environment}&outputKey=chainId&enrichFeeTokens=true`, { 
       headers: { Accept: "application/json" } 
     });
     if (!chainsRes.ok) {
@@ -13,7 +18,7 @@ async function main() {
     const chainsData = await chainsRes.json();
 
     // Call Endpoint #2: tokens
-    const tokensRes = await fetch("https://docs.chain.link/api/ccip/v1/tokens?environment=testnet&outputKey=chainId", { 
+    const tokensRes = await fetch(`https://docs.chain.link/api/ccip/v1/tokens?environment=${environment}&outputKey=chainId`, { 
       headers: { Accept: "application/json" } 
     });
     if (!tokensRes.ok) {
@@ -58,11 +63,15 @@ async function main() {
 
     // Write to output file
     fs.writeFileSync("./src/ccip/input/networkDetails.json", JSON.stringify(networkDetails, null, 2));
-    console.log(`Successfully generated networkDetails.json with ${Object.keys(networkDetails).length} chains`);
+    console.log(`Successfully generated networkDetails.json with ${Object.keys(networkDetails).length} chains for ${environment}`);
   } catch (err) {
     console.error("Request failed:", err.message);
     process.exitCode = 1;
   }
 }
 
-main();
+// Get environment from command line arguments or default to testnet
+const environment = process.argv[2] || "testnet";
+
+// Run the function
+main(environment);
